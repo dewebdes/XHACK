@@ -1,3 +1,9 @@
+Simulate hping:
+gcc flood.c -o flood
+sudo ./flood
+
+----------------------------------
+
 Simulate tcpdump:
 gcc StackSniffed.c -o snif
 sudo ./snif
