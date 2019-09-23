@@ -1,14 +1,19 @@
+#include <arpa/inet.h>
+#include <linux/if_packet.h>
+#include <sys/ioctl.h>
+#include <net/if.h>
+#include <netinet/ether.h>
 /*
 	Raw TCP packets
 	Silver Moon (m00n.silv3r@gmail.com)
 */
-#include&lt;stdio.h&gt;	//for printf
-#include&lt;string.h&gt; //memset
-#include&lt;sys/socket.h&gt;	//for socket ofcourse
-#include&lt;stdlib.h&gt; //for exit(0);
-#include&lt;errno.h&gt; //For errno - the error number
-#include&lt;netinet/tcp.h&gt;	//Provides declarations for tcp header
-#include&lt;netinet/ip.h&gt;	//Provides declarations for ip header
+#include <stdio.h>	//for printf
+#include <string.h> //memset
+#include <sys/socket.h>	//for socket ofcourse
+#include <stdlib.h> //for exit(0);
+#include <errno.h> //For errno - the error number
+#include <netinet/tcp.h>	//Provides declarations for tcp header
+#include <netinet/ip.h>	//Provides declarations for ip header
 
 /* 
 	96 bit (12 bytes) pseudo header needed for tcp header checksum calculation 
@@ -32,18 +37,18 @@ unsigned short csum(unsigned short *ptr,int nbytes)
 	register short answer;
 
 	sum=0;
-	while(nbytes&gt;1) {
+	while(nbytes>1) {
 		sum+=*ptr++;
 		nbytes-=2;
 	}
 	if(nbytes==1) {
 		oddbyte=0;
-		*((u_char*)&amp;oddbyte)=*(u_char*)ptr;
+		*((u_char*)&oddbyte)=*(u_char*)ptr;
 		sum+=oddbyte;
 	}
 
-	sum = (sum&gt;&gt;16)+(sum &amp; 0xffff);
-	sum = sum + (sum&gt;&gt;16);
+	sum = (sum>>16)+(sum & 0xffff);
+	sum = sum + (sum>>16);
 	answer=(short)~sum;
 	
 	return(answer);
@@ -57,7 +62,7 @@ int main (void)
 	if(s == -1)
 	{
 		//socket creation failed, may be because of non-root privileges
-		perror(&quot;Failed to create socket&quot;);
+		perror("Failed to create socket");
 		exit(1);
 	}
 	
@@ -77,45 +82,45 @@ int main (void)
 	
 	//Data part
 	data = datagram + sizeof(struct iphdr) + sizeof(struct tcphdr);
-	strcpy(data , &quot;ABCDEFGHIJKLMNOPQRSTUVWXYZ&quot;);
+	strcpy(data , "ABCDEFGHIJKLMNOPQRSTUVWXYZ");
 	
 	//some address resolution
-	strcpy(source_ip , &quot;192.168.1.2&quot;);
+	strcpy(source_ip , "192.168.1.2");
 	sin.sin_family = AF_INET;
 	sin.sin_port = htons(80);
-	sin.sin_addr.s_addr = inet_addr (&quot;1.2.3.4&quot;);
+	sin.sin_addr.s_addr = inet_addr ("1.2.3.4");
 	
 	//Fill in the IP Header
-	iph-&gt;ihl = 5;
-	iph-&gt;version = 4;
-	iph-&gt;tos = 0;
-	iph-&gt;tot_len = sizeof (struct iphdr) + sizeof (struct tcphdr) + strlen(data);
-	iph-&gt;id = htonl (54321);	//Id of this packet
-	iph-&gt;frag_off = 0;
-	iph-&gt;ttl = 255;
-	iph-&gt;protocol = IPPROTO_TCP;
-	iph-&gt;check = 0;		//Set to 0 before calculating checksum
-	iph-&gt;saddr = inet_addr ( source_ip );	//Spoof the source ip address
-	iph-&gt;daddr = sin.sin_addr.s_addr;
+	iph->ihl = 5;
+	iph->version = 4;
+	iph->tos = 0;
+	iph->tot_len = sizeof (struct iphdr) + sizeof (struct tcphdr) + strlen(data);
+	iph->id = htonl (54321);	//Id of this packet
+	iph->frag_off = 0;
+	iph->ttl = 255;
+	iph->protocol = IPPROTO_TCP;
+	iph->check = 0;		//Set to 0 before calculating checksum
+	iph->saddr = inet_addr ( source_ip );	//Spoof the source ip address
+	iph->daddr = sin.sin_addr.s_addr;
 	
 	//Ip checksum
-	iph-&gt;check = csum ((unsigned short *) datagram, iph-&gt;tot_len);
+	iph->check = csum ((unsigned short *) datagram, iph->tot_len);
 	
 	//TCP Header
-	tcph-&gt;source = htons (1234);
-	tcph-&gt;dest = htons (80);
-	tcph-&gt;seq = 0;
-	tcph-&gt;ack_seq = 0;
-	tcph-&gt;doff = 5;	//tcp header size
-	tcph-&gt;fin=0;
-	tcph-&gt;syn=1;
-	tcph-&gt;rst=0;
-	tcph-&gt;psh=0;
-	tcph-&gt;ack=0;
-	tcph-&gt;urg=0;
-	tcph-&gt;window = htons (5840);	/* maximum allowed window size */
-	tcph-&gt;check = 0;	//leave checksum 0 now, filled later by pseudo header
-	tcph-&gt;urg_ptr = 0;
+	tcph->source = htons (1234);
+	tcph->dest = htons (80);
+	tcph->seq = 0;
+	tcph->ack_seq = 0;
+	tcph->doff = 5;	//tcp header size
+	tcph->fin=0;
+	tcph->syn=1;
+	tcph->rst=0;
+	tcph->psh=0;
+	tcph->ack=0;
+	tcph->urg=0;
+	tcph->window = htons (5840);	/* maximum allowed window size */
+	tcph->check = 0;	//leave checksum 0 now, filled later by pseudo header
+	tcph->urg_ptr = 0;
 	
 	//Now the TCP checksum
 	psh.source_address = inet_addr( source_ip );
@@ -127,18 +132,18 @@ int main (void)
 	int psize = sizeof(struct pseudo_header) + sizeof(struct tcphdr) + strlen(data);
 	pseudogram = malloc(psize);
 	
-	memcpy(pseudogram , (char*) &amp;psh , sizeof (struct pseudo_header));
+	memcpy(pseudogram , (char*) &psh , sizeof (struct pseudo_header));
 	memcpy(pseudogram + sizeof(struct pseudo_header) , tcph , sizeof(struct tcphdr) + strlen(data));
 	
-	tcph-&gt;check = csum( (unsigned short*) pseudogram , psize);
+	tcph->check = csum( (unsigned short*) pseudogram , psize);
 	
 	//IP_HDRINCL to tell the kernel that headers are included in the packet
 	int one = 1;
-	const int *val = &amp;one;
+	const int *val = &one;
 	
-	if (setsockopt (s, IPPROTO_IP, IP_HDRINCL, val, sizeof (one)) &lt; 0)
+	if (setsockopt (s, IPPROTO_IP, IP_HDRINCL, val, sizeof (one))  < 0)
 	{
-		perror(&quot;Error setting IP_HDRINCL&quot;);
+		perror("Error setting IP_HDRINCL");
 		exit(0);
 	}
 	
@@ -146,14 +151,14 @@ int main (void)
 	while (1)
 	{
 		//Send the packet
-		if (sendto (s, datagram, iph-&gt;tot_len ,	0, (struct sockaddr *) &amp;sin, sizeof (sin)) &lt; 0)
+		if (sendto (s, datagram, iph->tot_len ,	0, (struct sockaddr *) &sin, sizeof (sin))  < 0)
 		{
-			perror(&quot;sendto failed&quot;);
+			perror("sendto failed");
 		}
 		//Data send successfully
 		else
 		{
-			printf (&quot;Packet Send. Length : %d \n&quot; , iph-&gt;tot_len);
+			printf ("Packet Send. Length : %d \n" , iph->tot_len);
 		}
 	}
 	
