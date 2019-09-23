@@ -1,3 +1,11 @@
+#include <arpa/inet.h>
+#include <linux/if_packet.h>
+#include <string.h>
+#include <stdlib.h>
+#include <sys/ioctl.h>
+#include <net/if.h>
+#include <netinet/ether.h>
+
 #include <stdio.h>
 #include <errno.h>
 #include <unistd.h>
