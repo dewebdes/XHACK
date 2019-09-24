@@ -2,6 +2,10 @@ Simulate hping:
 gcc flood.c -o flood
 sudo ./flood
 
+Check flood response:
+gcc tracer.c -o tracer
+sudo ./tracer
+
 ----------------------------------
 
 Simulate tcpdump:
